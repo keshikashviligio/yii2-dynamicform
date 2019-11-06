@@ -4,6 +4,8 @@
  * A jQuery plugin to clone form elements in a nested manner, maintaining accessibility.
  *
  * @author Wanderson Bragança <wanderson.wbc@gmail.com>
+ * @contributor Vivek Marakana <vivek.marakana@gmail.com>
+ * @contributor Riza Saputra <riza.saputra@gmail.com>
  */
 (function ($) {
     var pluginName = 'yiiDynamicForm';
@@ -39,11 +41,11 @@
         },
 
         addItem: function (widgetOptions, e, $elem) {
-           _addItem(widgetOptions, e, $elem);
+            _addItem(widgetOptions, e, $elem);
         },
 
         deleteItem: function (widgetOptions, e, $elem) {
-           _deleteItem(widgetOptions, e, $elem);
+            _deleteItem(widgetOptions, e, $elem);
         },
 
         updateContainer: function () {
@@ -87,8 +89,10 @@
 
         // remove "error/success" css class
         var yiiActiveFormData = $('#' + widgetOptions.formId).yiiActiveForm('data');
-        $template.find('.' + yiiActiveFormData.settings.errorCssClass).removeClass(yiiActiveFormData.settings.errorCssClass);
-        $template.find('.' + yiiActiveFormData.settings.successCssClass).removeClass(yiiActiveFormData.settings.successCssClass);
+        if(yiiActiveFormData && yiiActiveFormData.settings){
+            $template.find('.' + yiiActiveFormData.settings.errorCssClass).removeClass(yiiActiveFormData.settings.errorCssClass);
+            $template.find('.' + yiiActiveFormData.settings.successCssClass).removeClass(yiiActiveFormData.settings.successCssClass);
+        }
 
         return $template;
     };
@@ -115,7 +119,7 @@
         var count = _count($elem, widgetOptions);
 
         if (count < widgetOptions.limit) {
-            $toclone = widgetOptions.template;
+            $toclone = typeof(widgetOptions.template.clone) != "undefined" ? widgetOptions.template : $(widgetOptions.template);
             $newclone = $toclone.clone(false, false);
 
             if (widgetOptions.insertPosition === 'top') {
@@ -208,7 +212,7 @@
 
                     widgetsOptions = widgetsOptions.reverse();
                     for (var i = identifiers.length - 1; i >= 1; i--) {
-                        identifiers[i] = $elem.closest(widgetsOptions[i].widgetItem).index();
+                        identifiers[i] = $elem.closest(widgetsOptions.widgetItem).index();
                     }
                 }
 
@@ -347,12 +351,30 @@
             });
         }
 
+        // "kartik-v/yii2-widget-datecontrol"
+        var $hasDateControl = $(widgetOptionsRoot.widgetItem).find('[data-krajee-datecontrol]');
+        if ($hasDateControl.length > 0) {
+            $hasDateControl.each(function() {
+                var id = $(this).attr('id');
+                var dcElementOptions = eval($(this).attr('data-krajee-datecontrol'));
+                if (id.indexOf(dcElementOptions.idSave) < 0) {
+                    // initialize the NEW DateControl element
+                    var cdNewOptions = $.extend(true, {}, dcElementOptions);
+                    cdNewOptions.idSave = $(this).parent().next().attr('id');
+                    $(this).parent().kvDatepicker(eval($(this).attr('data-krajee-kvdatepicker')));
+                    $(this).removeAttr('value name data-krajee-datecontrol');
+                    $(this).datecontrol(cdNewOptions);
+
+                }
+            });
+        }
+
         // "kartik-v/yii2-widget-datepicker"
-        var $hasDatepicker = $(widgetOptionsRoot.widgetItem).find('[data-krajee-datepicker]');
+        var $hasDatepicker = $(widgetOptionsRoot.widgetItem).find('[data-krajee-kvdatepicker]');
         if ($hasDatepicker.length > 0) {
             $hasDatepicker.each(function() {
-                $(this).parent().removeData().datepicker('remove');
-                $(this).parent().datepicker(eval($(this).attr('data-krajee-datepicker')));
+                $(this).parent().removeData().kvDatepicker('remove');
+                $(this).parent().kvDatepicker(eval($(this).attr('data-krajee-kvdatepicker')));
             });
         }
 
@@ -442,7 +464,7 @@
             $hasSelect2.each(function() {
                 var id = $(this).attr('id');
                 var configSelect2 = eval($(this).attr('data-krajee-select2'));
-
+                var customEventCallback = $(this).data('eventlistener');
                 if ($(this).data('select2')) {
                     $(this).select2('destroy');
                 }
@@ -455,19 +477,22 @@
                     _restoreKrajeeDepdrop($(this));
                 }
 
+
                 $.when($('#' + id).select2(configSelect2)).done(initS2Loading(id, '.select2-container--krajee'));
 
                 var kvClose = 'kv_close_' + id.replace(/\-/g, '_');
 
-                $('#' + id).on('select2:opening', function(ev) {
-                    initS2Loading(id, kvClose, ev);
-                });
-
                 $('#' + id).on('select2:unselect', function() {
                     window[kvClose] = true;
                 });
+                $('#' + id).on('select2:select', function(e) {
+                    if(customEventCallback){
+                        eval(customEventCallback)(e);
+                    }
+                    console.log(e);
+                });
 
-               if (configDepdrop) {
+                if (configDepdrop) {
                     var loadingText = (configDepdrop.loadingText) ? configDepdrop.loadingText : 'Loading ...';
                     initDepdropS2(id, loadingText);
                 }
