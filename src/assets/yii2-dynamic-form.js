@@ -199,6 +199,7 @@
 
         if (id !== undefined) {
             var matches = id.match(regexID);
+            // console.log(matches);
             if (matches && matches.length === 4) {
                 matches[2] = matches[2].substring(1, matches[2].length - 1);
                 var identifiers = matches[2].split('-');
@@ -209,19 +210,24 @@
                     $elem.parents('div[data-dynamicform]').each(function(i){
                         widgetsOptions[i] = eval($(this).attr('data-dynamicform'));
                     });
-
+                    // console.log(widgetsOptions);
                     widgetsOptions = widgetsOptions.reverse();
                     for (var i = identifiers.length - 1; i >= 1; i--) {
-                        identifiers[i] = $elem.closest(widgetsOptions.widgetItem).index();
+                        let wItemIndex = widgetsOptions.length > 1 ? i: 0;
+                        identifiers[i] = $elem.closest(widgetsOptions[wItemIndex].widgetItem).index();
                     }
+                    // console.log(identifiers);
                 }
 
                 newID = matches[1] + '-' + identifiers.join('-') + '-' + matches[3];
                 $elem.attr('id', newID);
+
             } else {
                 newID = id + index;
                 $elem.attr('id', newID);
+                // console.log(newID);
             }
+
         }
 
         if (id !== newID) {
@@ -245,7 +251,7 @@
                 matches[2] = matches[2].replace(/\]\[/g, "-").replace(/\]|\[/g, '');
                 var identifiers = matches[2].split('-');
                 identifiers[0] = index;
-
+                // console.log('matches', matches[2], name);
                 if (identifiers.length > 1) {
                     var widgetsOptions = [];
                     $elem.parents('div[data-dynamicform]').each(function(i){
@@ -259,6 +265,7 @@
                 }
 
                 name = matches[1] + '[' + identifiers.join('][') + ']' + matches[3];
+                // console.log(name, identifiers);
                 $elem.attr('name', name);
             }
         }
@@ -462,9 +469,11 @@
         var $hasSelect2 = $(widgetOptionsRoot.widgetItem).find('[data-krajee-select2]');
         if ($hasSelect2.length > 0) {
             $hasSelect2.each(function() {
+
                 var id = $(this).attr('id');
                 var configSelect2 = eval($(this).attr('data-krajee-select2'));
                 var customEventCallback = $(this).data('eventlistener');
+                // console.log(id, configSelect2);
                 if ($(this).data('select2')) {
                     $(this).select2('destroy');
                 }
