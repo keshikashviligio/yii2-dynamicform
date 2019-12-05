@@ -199,7 +199,7 @@
 
         if (id !== undefined) {
             var matches = id.match(regexID);
-            // console.log(matches);
+            console.log(matches);
             if (matches && matches.length === 4) {
                 matches[2] = matches[2].substring(1, matches[2].length - 1);
                 var identifiers = matches[2].split('-');
@@ -225,6 +225,55 @@
             } else {
                 newID = id + index;
                 $elem.attr('id', newID);
+                // console.log(newID);
+            }
+
+        }
+
+        if (id !== newID) {
+            $elem.closest(widgetOptions.widgetItem).find('.field-' + id).each(function() {
+                $(this).removeClass('field-' + id).addClass('field-' + newID);
+            });
+            // update "for" attribute
+            $elem.closest(widgetOptions.widgetItem).find("label[for='" + id + "']").attr('for',newID);
+        }
+
+        return newID;
+    };
+
+    var _updateAttrHref = function($elem, index) {
+        var widgetOptions = eval($elem.closest('div[data-dynamicform]').attr('data-dynamicform'));
+        var id            = $elem.attr('href');
+        var newID         = id;
+
+        if (id !== undefined) {
+            var matches = id.match(regexID);
+            console.log(matches);
+            if (matches && matches.length === 4) {
+                matches[2] = matches[2].substring(1, matches[2].length - 1);
+                var identifiers = matches[2].split('-');
+                identifiers[0] = index;
+
+                if (identifiers.length > 1) {
+                    var widgetsOptions = [];
+                    $elem.parents('div[data-dynamicform]').each(function(i){
+                        widgetsOptions[i] = eval($(this).attr('data-dynamicform'));
+                    });
+                    // console.log(widgetsOptions);
+                    widgetsOptions = widgetsOptions.reverse();
+                    for (var i = identifiers.length - 1; i >= 1; i--) {
+                        let wItemIndex = widgetsOptions.length > 1 ? i: 0;
+                        identifiers[i] = $elem.closest(widgetsOptions[wItemIndex].widgetItem).index();
+                    }
+                    // console.log(identifiers);
+                }
+
+                newID = matches[1] + '-' + identifiers.join('-') + '-' + matches[3];
+                $elem.attr('href', newID);
+
+            } else {
+                newID = id + index;
+                $elem.attr('href', newID);
                 // console.log(newID);
             }
 
@@ -281,6 +330,8 @@
             $(this).find('*').each(function() {
                 // update "id" attribute
                 _updateAttrID($(this), index);
+
+                _updateAttrHref($(this), index);
 
                 // update "name" attribute
                 _updateAttrName($(this), index);
