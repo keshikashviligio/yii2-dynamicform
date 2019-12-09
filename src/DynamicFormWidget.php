@@ -65,6 +65,8 @@ class DynamicFormWidget extends \yii\base\Widget
      * @var integer
      */
     public $min = 1;
+
+    public $alwaysRenderOneItem = true;
     /**
      * @var string
      */
@@ -131,6 +133,7 @@ class DynamicFormWidget extends \yii\base\Widget
         $this->_options['insertPosition']  = $this->insertPosition;
         $this->_options['formId']          = $this->formId;
         $this->_options['min']             = $this->min;
+        $this->_options['alwaysRenderOneItem']             = $this->alwaysRenderOneItem;
         $this->_options['fields']          = [];
 
         foreach ($this->formFields as $field) {
@@ -233,7 +236,7 @@ class DynamicFormWidget extends \yii\base\Widget
         $document->appendChild($document->importNode($results->first()->getNode(0), true));
         $this->_options['template'] = trim($document->saveHTML());
 
-        if (isset($this->_options['min']) && $this->_options['min'] === 0 && $this->model->isNewRecord) {
+        if (isset($this->_options['min']) && $this->_options['min'] === 0 && $this->model->isNewRecord && !$this->_options['alwaysRenderOneItem']) {
             $content = $this->removeItems($content);
         }
 
