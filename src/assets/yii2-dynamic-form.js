@@ -320,6 +320,54 @@
         return name;
     };
 
+    var _updateAttrDataTarget = function($elem, index) {
+        var widgetOptions = eval($elem.closest('div[data-dynamicform]').attr('data-dynamicform'));
+        var id            = $elem.attr('data-target');
+        var newID         = id;
+
+        if (id !== undefined) {
+            var matches = id.match(regexID);
+            // console.log(matches);
+            if (matches && matches.length === 4) {
+                matches[2] = matches[2].substring(1, matches[2].length - 1);
+                var identifiers = matches[2].split('-');
+                identifiers[0] = index;
+
+                if (identifiers.length > 1) {
+                    var widgetsOptions = [];
+                    $elem.parents('div[data-dynamicform]').each(function(i){
+                        widgetsOptions[i] = eval($(this).attr('data-dynamicform'));
+                    });
+
+                    widgetsOptions = widgetsOptions.reverse();
+                    for (var i = identifiers.length - 1; i >= 1; i--) {
+                        const wIndex = widgetsOptions.length - 1 < i ? widgetsOptions.length -1 : i;
+                        identifiers[i] = $elem.closest(widgetsOptions[wIndex].widgetItem).index();
+                    }
+                }
+
+                newID = matches[1] + '-' + identifiers.join('-') + '-' + matches[3];
+                $elem.attr('data-target', newID);
+
+            } else {
+                newID = id + index;
+                $elem.attr('data-target', newID);
+                // console.log(newID);
+            }
+
+        }
+
+        if (id !== newID) {
+            $elem.closest(widgetOptions.widgetItem).find('.field-' + id).each(function() {
+                $(this).removeClass('field-' + id).addClass('field-' + newID);
+            });
+            // update "for" attribute
+            $elem.closest(widgetOptions.widgetItem).find("label[for='" + id + "']").attr('for',newID);
+        }
+
+        return newID;
+    };
+
     var _updateAttributes = function(widgetOptions) {
         var widgetOptionsRoot = _getWidgetOptionsRoot(widgetOptions);
 
@@ -333,6 +381,8 @@
 
                 // update "name" attribute
                 _updateAttrName($(this), index);
+
+                _updateAttrDataTarget($(this), index);
             });
         });
     };
