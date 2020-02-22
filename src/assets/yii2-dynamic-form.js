@@ -573,6 +573,7 @@
                 var configSelect2 = eval($(this).attr('data-krajee-select2'));
                 var customEventCallback = $(this).attr('data-eventlistener');
                 var customChangeCallback = $(this).attr('data-eventlistenerChange');
+                var onClearCallback = $(this).attr('data-select2:clear');
                 // console.log(id, configSelect2);
                 if ($(this).data('select2')) {
                     $(this).select2('destroy');
@@ -597,6 +598,12 @@
                 $('#' + id).on('select2:select', function(e) {
                     if(customEventCallback){
                         eval(customEventCallback)(e);
+                    }
+                    // console.log(e);
+                });
+                $('#' + id).on('select2:clear', function(e) {
+                    if(onClearCallback){
+                        eval(onClearCallback)(e);
                     }
                     // console.log(e);
                 });
